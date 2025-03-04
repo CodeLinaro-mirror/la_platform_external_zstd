@@ -4,7 +4,6 @@ zstddeclib.c
 zstdenclib.c
 zstd.c
 zstd.h
-zstd_errors.h
 
 # test artifacts
 temp*

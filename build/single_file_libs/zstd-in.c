@@ -69,7 +69,6 @@
 #include "compress/zstd_compress_literals.c"
 #include "compress/zstd_compress_sequences.c"
 #include "compress/zstd_compress_superblock.c"
-#include "compress/zstd_preSplit.c"
 #include "compress/zstd_compress.c"
 #include "compress/zstd_double_fast.c"
 #include "compress/zstd_fast.c"

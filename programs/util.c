@@ -8,6 +8,11 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
+
 /*-****************************************
 *  Dependencies
 ******************************************/
@@ -1641,3 +1646,7 @@ int UTIL_countLogicalCores(void)
 {
     return UTIL_countCores(1);
 }
+
+#if defined (__cplusplus)
+}
+#endif

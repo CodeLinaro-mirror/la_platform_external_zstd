@@ -7,7 +7,9 @@
  * in the COPYING file in the root directory of this source tree).
  */
 #include "Pzstd.h"
+extern "C" {
 #include "datagen.h"
+}
 #include "test/RoundTrip.h"
 #include "utils/ScopeGuard.h"
 

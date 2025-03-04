@@ -85,10 +85,14 @@ test:
 	$(MAKE) -C $(TESTDIR) $@
 	ZSTD=../../programs/zstd $(MAKE) -C doc/educational_decoder $@
 
+## shortest: same as `make check`
+.PHONY: shortest
+shortest:
+	$(Q)$(MAKE) -C $(TESTDIR) $@
+
 ## check: run basic tests for `zstd` cli
 .PHONY: check
-check:
-	$(Q)$(MAKE) -C $(TESTDIR) $@
+check: shortest
 
 .PHONY: automated_benchmarking
 automated_benchmarking:
@@ -141,13 +145,13 @@ clean:
 	$(Q)$(MAKE) -C contrib/largeNbDicts $@ > $(VOID)
 	$(Q)$(MAKE) -C contrib/externalSequenceProducer $@ > $(VOID)
 	$(Q)$(RM) zstd$(EXT) zstdmt$(EXT) tmp*
-	$(Q)$(RM) -r lz4 cmakebuild mesonbuild install
+	$(Q)$(RM) -r lz4 cmakebuild install
 	@echo Cleaning completed
 
 #------------------------------------------------------------------------------
 # make install is validated only for Linux, macOS, Hurd and some BSD targets
 #------------------------------------------------------------------------------
-ifneq (,$(filter Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly NetBSD MSYS_NT% CYGWIN_NT% Haiku AIX,$(shell sh -c 'MSYSTEM="MSYS" uname') ))
+ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly NetBSD MSYS_NT CYGWIN_NT Haiku AIX))
 
 HOST_OS = POSIX
 
@@ -196,9 +200,9 @@ travis-install:
 .PHONY: clangbuild-darwin-fat
 clangbuild-darwin-fat: clean
 	clang -v
-	CXX=clang++ CC=clang CFLAGS+="-Werror -Wconversion -Wno-sign-conversion -Wdocumentation -arch arm64" $(MAKE) zstd-release
+	CXX=clang++ CC=clang CFLAGS="-Werror -Wconversion -Wno-sign-conversion -Wdocumentation -arch arm64" $(MAKE) zstd-release
 	mv programs/zstd programs/zstd_arm64
-	CXX=clang++ CC=clang CFLAGS+="-Werror -Wconversion -Wno-sign-conversion -Wdocumentation -arch x86_64" $(MAKE) zstd-release
+	CXX=clang++ CC=clang CFLAGS="-Werror -Wconversion -Wno-sign-conversion -Wdocumentation -arch x86_64" $(MAKE) zstd-release
 	mv programs/zstd programs/zstd_x64
 	lipo -create programs/zstd_x64 programs/zstd_arm64 -output programs/zstd
 
@@ -289,16 +293,16 @@ regressiontest:
 	$(MAKE) -C $(FUZZDIR) regressiontest
 
 uasanregressiontest:
-	$(MAKE) -C $(FUZZDIR) regressiontest CC=clang CXX=clang++ CFLAGS="-O3 -fsanitize=address,undefined -Werror" CXXFLAGS="-O3 -fsanitize=address,undefined -Werror"
+	$(MAKE) -C $(FUZZDIR) regressiontest CC=clang CXX=clang++ CFLAGS="-O3 -fsanitize=address,undefined" CXXFLAGS="-O3 -fsanitize=address,undefined"
 
 msanregressiontest:
-	$(MAKE) -C $(FUZZDIR) regressiontest CC=clang CXX=clang++ CFLAGS="-O3 -fsanitize=memory -Werror" CXXFLAGS="-O3 -fsanitize=memory -Werror"
+	$(MAKE) -C $(FUZZDIR) regressiontest CC=clang CXX=clang++ CFLAGS="-O3 -fsanitize=memory" CXXFLAGS="-O3 -fsanitize=memory"
 
 update_regressionResults : REGRESS_RESULTS_DIR := /tmp/regress_results_dir/
 update_regressionResults:
-	$(MAKE) -j -C programs zstd
-	$(MAKE) -j -C tests/regression test
-	$(RM) -r $(REGRESS_RESULTS_DIR)
+	$(MAKE) -C programs zstd
+	$(MAKE) -C tests/regression test
+	$(RM) -rf $(REGRESS_RESULTS_DIR)
 	$(MKDIR) $(REGRESS_RESULTS_DIR)
 	./tests/regression/test                         \
         --cache  tests/regression/cache             \
@@ -386,19 +390,19 @@ lz4install:
 endif
 
 
-ifneq (,$(filter MSYS%,$(shell sh -c 'MSYSTEM="MSYS" uname') ))
+ifneq (,$(filter MSYS%,$(shell uname)))
 HOST_OS = MSYS
 endif
 
 #------------------------------------------------------------------------
 # target specific tests
 #------------------------------------------------------------------------
-ifneq (,$(filter MSYS POSIX,$(HOST_OS)))
+ifneq (,$(filter $(HOST_OS),MSYS POSIX))
 
 CMAKE ?= cmake
 CMAKE_PARAMS = -DZSTD_BUILD_CONTRIB:BOOL=ON -DZSTD_BUILD_STATIC:BOOL=ON -DZSTD_BUILD_TESTS:BOOL=ON -DZSTD_ZLIB_SUPPORT:BOOL=ON -DZSTD_LZMA_SUPPORT:BOOL=ON
 
-ifneq (,$(filter MSYS%,$(shell sh -c 'MSYSTEM="MSYS" uname')))
+ifneq (,$(filter MSYS%,$(shell uname)))
 CMAKE_PARAMS = -G"MSYS Makefiles" -DZSTD_MULTITHREAD_SUPPORT:BOOL=OFF -DZSTD_BUILD_STATIC:BOOL=ON -DZSTD_BUILD_TESTS:BOOL=ON
 endif
 
@@ -410,24 +414,6 @@ cmakebuild:
 	cd cmakebuild; $(CMAKE) -Wdev -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Werror -O0" -DCMAKE_INSTALL_PREFIX=install $(CMAKE_PARAMS) ../build/cmake
 	$(CMAKE) --build cmakebuild --target install -- -j V=1
 	cd cmakebuild; ctest -V -L Medium
-
-MESON ?= meson
-NINJA ?= ninja
-
-.PHONY: mesonbuild
-mesonbuild:
-	$(MESON) setup \
-		--buildtype=debugoptimized \
-		-Db_lundef=false \
-		-Dauto_features=enabled \
-		-Dbin_programs=true \
-		-Dbin_tests=true \
-		-Dbin_contrib=true \
-		-Ddefault_library=both \
-		build/meson mesonbuild
-	$(NINJA) -C mesonbuild/
-	$(MESON) test -C mesonbuild/ --print-errorlogs
-	$(MESON) install -C mesonbuild --destdir staging/
 
 .PHONY: c89build gnu90build c99build gnu99build c11build bmix64build bmix32build bmi32build staticAnalyze
 c89build: clean

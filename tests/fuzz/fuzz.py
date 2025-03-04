@@ -408,6 +408,7 @@ def build(args):
     mflags = shlex.split(args.mflags)
     # Flags to be added to both cflags and cxxflags
     common_flags = [
+        '-Werror',
         '-Wno-error=declaration-after-statement',
         '-Wno-error=c++-compat',
         '-Wno-error=deprecated' # C files are sometimes compiled with CXX

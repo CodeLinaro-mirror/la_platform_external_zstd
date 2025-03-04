@@ -30,7 +30,6 @@ libzstd_sources = [join_paths(zstd_rootdir, 'lib/common/entropy_common.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstd_compress_literals.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstd_compress_sequences.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstd_compress_superblock.c'),
-  join_paths(zstd_rootdir, 'lib/compress/zstd_preSplit.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstdmt_compress.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstd_fast.c'),
   join_paths(zstd_rootdir, 'lib/compress/zstd_double_fast.c'),
@@ -125,7 +124,7 @@ libzstd = library('zstd',
   version: zstd_libversion)
 
 libzstd_dep = declare_dependency(link_with: libzstd,
-  include_directories: join_paths(zstd_rootdir,'lib')) # Do not expose private headers
+  include_directories: libzstd_includes)
 
 # we link to both:
 # - the shared library (for public symbols)
@@ -135,8 +134,7 @@ libzstd_dep = declare_dependency(link_with: libzstd,
 # -fvisibility=hidden means those cannot be found
 if get_option('default_library') == 'static'
   libzstd_static = libzstd
-  libzstd_internal_dep = declare_dependency(link_with: libzstd,
-      include_directories: libzstd_includes)
+  libzstd_internal_dep = libzstd_dep
 else
   if get_option('default_library') == 'shared'
     libzstd_static = static_library('zstd_objlib',
@@ -149,13 +147,11 @@ else
   if cc_id == compiler_msvc
     # msvc does not actually support linking to both, but errors out with:
     #   error LNK2005: ZSTD_<foo> already defined in zstd.lib(zstd-1.dll)
-    libzstd_internal_dep = declare_dependency(link_with: libzstd_static,
-      include_directories: libzstd_includes)
+    libzstd_internal_dep = declare_dependency(link_with: libzstd_static)
   else
     libzstd_internal_dep = declare_dependency(link_with: libzstd,
       # the static library must be linked after the shared one
-      dependencies: declare_dependency(link_with: libzstd_static),
-      include_directories: libzstd_includes)
+      dependencies: declare_dependency(link_with: libzstd_static))
   endif
 endif
 

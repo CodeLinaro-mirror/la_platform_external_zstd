@@ -14,10 +14,6 @@
 
 #include <stddef.h>   /* size_t */
 
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
 void RDG_genStdout(unsigned long long size, double matchProba, double litProba, unsigned seed);
 void RDG_genBuffer(void* buffer, size_t size, double matchProba, double litProba, unsigned seed);
 /*!RDG_genBuffer
@@ -30,9 +26,5 @@ void RDG_genBuffer(void* buffer, size_t size, double matchProba, double litProba
    RDG_genStdout
    Same as RDG_genBuffer, but generates data into stdout
 */
-
-#if defined (__cplusplus)
-} /* extern "C" */
-#endif
 
 #endif
