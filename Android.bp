@@ -74,6 +74,7 @@ cc_library {
         "//external/elfutils:__subpackages__",
         "//external/libbpf:__subpackages__",
         "//external/mesa3d:__subpackages__",
+        "//external/ninja:__subpackages__",
         "//external/perfetto:__subpackages__",
         "//external/puffin:__subpackages__",
         "//external/squashfs-tools/squashfs-tools:__subpackages__",
