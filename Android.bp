@@ -112,6 +112,17 @@ cc_library {
     export_include_dirs: ["lib"],
 }
 
+cc_library_static {
+    name: "libzstd_ndk",
+    defaults: ["zstd_defaults"],
+    srcs: ["lib/*/*.c"],
+    local_include_dirs: ["lib/common"],
+    export_include_dirs: ["lib"],
+    sdk_version: "minimum",
+    stl: "none",
+    visibility: ["//external/angle"],
+}
+
 cc_binary_host {
     name: "zstd",
     defaults: ["zstd_defaults"],
